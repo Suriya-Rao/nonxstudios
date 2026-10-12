@@ -28,6 +28,9 @@ $nav            = [
     ['label' => 'Contact',  'href' => '/contact'],
 ];
 $current = \App\Core\Request::path();
+// Analytics consent is read server-side so the vendor script is only ever
+// written into the page after the visitor has actually accepted.
+$analyticsConsented = \App\Controllers\ConsentController::granted();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -181,5 +184,7 @@ $current = \App\Core\Request::path();
 <script src="<?= e(asset('assets/js/hero3d.js')) ?>" defer></script>
 <?php endif; ?>
 <script src="<?= e(asset('assets/js/site.js')) ?>" defer></script>
+<?php require base_path('app/Views/components/analytics.php'); ?>
+<?php require base_path('app/Views/components/consent.php'); ?>
 </body>
 </html>

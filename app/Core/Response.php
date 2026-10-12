@@ -60,7 +60,21 @@ final class Response
         header('X-Frame-Options: SAMEORIGIN');
         header('Referrer-Policy: strict-origin-when-cross-origin');
         header('Permissions-Policy: geolocation=(), microphone=(), camera=()');
-        header("Content-Security-Policy: default-src 'self'; img-src 'self' data:; media-src 'self' https:; style-src 'self' 'unsafe-inline'; script-src 'self'; font-src 'self'; frame-src https://www.youtube.com https://player.vimeo.com; object-src 'none'; base-uri 'self'; form-action 'self'");
+
+        // The analytics provider's origins are appended only when a provider is
+        // actually configured and enabled, so the default policy stays exactly
+        // as tight as it is without analytics.
+        $origins = \App\Services\Analytics::cspOrigins();
+        $script  = "'self'" . ($origins['script'] !== [] ? ' ' . implode(' ', $origins['script']) : '');
+        $connect = "'self'" . ($origins['connect'] !== [] ? ' ' . implode(' ', $origins['connect']) : '');
+
+        header(
+            "Content-Security-Policy: default-src 'self'; img-src 'self' data:;"
+            . " media-src 'self' https:; style-src 'self' 'unsafe-inline';"
+            . " script-src $script; connect-src $connect; font-src 'self';"
+            . ' frame-src https://www.youtube.com https://player.vimeo.com;'
+            . " object-src 'none'; base-uri 'self'; form-action 'self'"
+        );
         if ((bool) config('app.session.secure')) {
             header('Strict-Transport-Security: max-age=31536000; includeSubDomains');
         }

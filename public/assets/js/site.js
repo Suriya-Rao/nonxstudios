@@ -295,6 +295,43 @@
         els.forEach(function (el) { el.textContent = y; });
     }
 
+    /* --- Cookie consent ------------------------------------------------- */
+    // Progressive enhancement only. The banner is a working POST form without
+    // this; here we submit it in the background so the page does not reload,
+    // and on acceptance reload once so the server can emit the analytics
+    // script. That keeps the decision entirely server-side.
+    function initConsent() {
+        var form = document.querySelector('[data-consent-form]');
+        if (!form) return;
+
+        form.addEventListener('submit', function (e) {
+            if (!window.fetch) return; // let the native POST happen
+            e.preventDefault();
+
+            var submitter = e.submitter || form.querySelector('button[name="consent"]');
+            var body = new FormData(form);
+            if (submitter && submitter.name) {
+                body.set(submitter.name, submitter.value);
+            }
+
+            fetch(form.action, {
+                method: 'POST',
+                body: body,
+                credentials: 'same-origin',
+                headers: { 'X-Requested-With': 'fetch' }
+            }).then(function () {
+                if (submitter && submitter.value === 'accept') {
+                    // Reload so the vendor script is server-rendered.
+                    window.location.reload();
+                } else {
+                    form.remove();
+                }
+            }).catch(function () {
+                form.submit(); // fall back to a normal POST
+            });
+        });
+    }
+
     /* --- Boot ----------------------------------------------------------- */
     function boot() {
         initLoader();
@@ -305,6 +342,7 @@
         initFilters();
         initLazyImages();
         initYear();
+        initConsent();
     }
 
     if (document.readyState === 'loading') {

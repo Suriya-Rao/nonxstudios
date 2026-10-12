@@ -37,6 +37,18 @@ return [
         ))),
     ],
 
+    /*
+     * Analytics is OFF unless you choose a provider and supply your own ID.
+     * Nothing is sent anywhere by default. Provider metadata (script URL,
+     * CSP origins, cookie behaviour) lives in App\Services\Analytics.
+     */
+    'analytics' => [
+        'provider'        => env('ANALYTICS_PROVIDER', ''),   // '' | plausible | fathom | umami | ga4
+        'id'              => env('ANALYTICS_ID', ''),         // your site/measurement ID
+        'host'            => env('ANALYTICS_HOST', ''),       // self-hosted base URL (plausible, umami)
+        'require_consent' => env('ANALYTICS_REQUIRE_CONSENT', null),
+    ],
+
     'mail' => [
         'enabled'    => (bool) env('MAIL_ENABLED', false),
         'host'       => env('MAIL_HOST', ''),

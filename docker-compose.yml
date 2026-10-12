@@ -71,6 +71,12 @@ services:
       MAIL_FROM_NAME: ${MAIL_FROM_NAME:-NONXSTUDIOS}
       MAIL_TO_ADDRESS: ${MAIL_TO_ADDRESS:-}
 
+      # Analytics is off unless a provider and ID are both set.
+      ANALYTICS_PROVIDER: ${ANALYTICS_PROVIDER:-}
+      ANALYTICS_ID: ${ANALYTICS_ID:-}
+      ANALYTICS_HOST: ${ANALYTICS_HOST:-}
+      ANALYTICS_REQUIRE_CONSENT: ${ANALYTICS_REQUIRE_CONSENT:-}
+
       # Set SEED_DEMO=true once to load the six demo projects.
       SEED_DEMO: ${SEED_DEMO:-false}
       ADMIN_EMAIL: ${ADMIN_EMAIL:-}

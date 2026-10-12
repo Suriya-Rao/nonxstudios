@@ -16,7 +16,7 @@ production.
 2. [Local setup](#2-local-setup)
 3. [Docker (recommended)](#3-docker-recommended)
 4. [Create the first administrator](#4-create-the-first-administrator)
-5. [Configure SMTP](#5-configure-smtp)
+5. [Configure SMTP](#5-configure-smtp) — includes [analytics](#51-configure-analytics-optional-off-by-default)
 6. [Project structure](#6-project-structure)
 7. [How the security model works](#7-how-the-security-model-works)
 8. [Deployment to PHP hosting](#8-deployment-to-php-hosting)
@@ -246,6 +246,47 @@ Notes:
 
 ---
 
+## 5.1 Configure analytics (optional, off by default)
+
+Nothing is sent anywhere until you set a provider **and** an ID. With both
+blank the site emits no analytics markup at all and the Content-Security-Policy
+stays at `script-src 'self'` — the same as a site that never had analytics.
+
+```
+ANALYTICS_PROVIDER=plausible        # plausible | fathom | umami | ga4
+ANALYTICS_ID=your-domain.com        # your own site/measurement ID
+ANALYTICS_HOST=                     # self-hosted base URL (plausible, umami)
+ANALYTICS_REQUIRE_CONSENT=          # blank = provider default
+```
+
+Four providers are supported. Each is described once in
+`app/Services/Analytics.php`, which is the single source of truth — the script
+tag, the CSP origins, the consent default and the privacy-policy wording all
+read from it, so they cannot drift apart.
+
+| Provider    | Sets cookies | Consent banner by default |
+|-------------|--------------|---------------------------|
+| `plausible` | no           | no                        |
+| `fathom`    | no           | no                        |
+| `umami`     | no           | no                        |
+| `ga4`       | yes          | yes                       |
+
+The banner is only rendered when the provider actually requires consent —
+showing one for a cookieless tool trains visitors to dismiss it unread. Set
+`ANALYTICS_REQUIRE_CONSENT=true` to require opt-in regardless of provider.
+
+Consent is a plain POST form, so it works without JavaScript: the choice is
+stored in a `nonx_consent` cookie and the vendor script is emitted **server
+side**, meaning a visitor who declines is never sent the script at all rather
+than having it blocked client-side. An unknown `ANALYTICS_PROVIDER` disables
+analytics and logs a warning rather than silently emitting a broken tag.
+
+To use a provider that is not listed, add it to the `PROVIDERS` map in
+`app/Services/Analytics.php` — its origins then flow into the CSP
+automatically.
+
+---
+
 ## 6. Project structure
 
 ```
@@ -376,9 +417,12 @@ lock down `database/seed.php`.
       **blank** when Apache serves the site directly. Leaving it blank behind a
       proxy makes every visitor share one rate-limit bucket; setting it while
       serving directly lets visitors forge their own IP.
-- [ ] **Analytics and cookie consent** — neither is bundled. If you add a
-      tracking script, add a consent banner with it and update the privacy
-      policy, or you will be collecting personal data without a lawful basis.
+- [ ] **Analytics and cookie consent** — analytics is off unless you set
+      `ANALYTICS_PROVIDER` and `ANALYTICS_ID` (see §5.1). The consent banner,
+      CSP entries and privacy-policy wording all follow from that setting, so
+      there is nothing else to wire up. If you add a tracking script by any
+      other means, add a consent banner with it and update the privacy policy,
+      or you will be collecting personal data without a lawful basis.
 - [ ] **Regenerate the social card** — `assets/images/og-image.png` ships with a
       placeholder domain. Rerun `tools/generate-brand-assets.php` after editing
       the footer text if you want your own domain on it.
@@ -399,6 +443,8 @@ lock down `database/seed.php`.
 - Fully working contact form with server-side validation
 - FAQ page with an accessible `<details>` accordion and `FAQPage` JSON-LD
 - Privacy Policy and Terms pages
+- Optional analytics (Plausible, Fathom, Umami, GA4) with a server-side
+  consent banner — off by default, and no markup at all until configured
 - Custom 403/404/405/429/500 error page
 - Dynamic footer with configurable email, socials and a PHP-generated year
 
@@ -433,7 +479,7 @@ lock down `database/seed.php`.
 Verified against PHP 8.2 (Docker: `php:8.2-apache`) and MariaDB 10.11, served by
 Apache with the document root at `public/`.
 
-**Syntax** — `php -l` on all 63 PHP files: 0 failures.
+**Syntax** — `php -l` on all 68 PHP files: 0 failures.
 
 **Public routes** — `/`, `/work`, `/work?category=…`, `/services`, `/about`,
 `/faq`, `/contact`, `/project/{slug}` (×6), `/privacy`, `/terms`,
@@ -472,6 +518,19 @@ paths or stack traces.
 against the real visitor address rather than the proxy, and the contact rate
 limiter then isolates visitors from one another (three submissions from one
 address block only that address).
+
+**Analytics and consent** — with `ANALYTICS_PROVIDER` blank the homepage emits
+0 analytics references, no consent form, and a CSP of `script-src 'self'`. With
+`ga4` set, the CSP gained `https://www.googletagmanager.com` (script) and the
+Google Analytics origins (connect), the banner rendered, and the vendor script
+was **absent until consent** — then present after accepting, still absent after
+declining. Accept/decline round-trips were driven through a real browser: the
+banner is pinned to the viewport at 390×844 with both buttons hit-testable,
+accepting reloads and the choice persists across pages. An invalid `consent`
+value returns 400, a bad CSRF token 403, and `return_to=//evil.example.com` is
+neutralised to `/`. With `plausible` set (cookieless) the script loads
+immediately and no banner is shown. An unknown provider emits nothing and logs
+a warning. axe-core still reports 0 violations with the banner visible.
 
 **Assets** — CSS, JS, GSAP, ScrollTrigger, Three.js, hero3d.js, `favicon.ico`,
 `apple-touch-icon.png` and `og-image.png` all serve 200; Three.js/hero3d load on

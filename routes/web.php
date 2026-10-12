@@ -7,6 +7,7 @@ declare(strict_types=1);
  * @var \App\Core\Router $router
  */
 
+use App\Controllers\ConsentController;
 use App\Controllers\ContactController;
 use App\Controllers\HomeController;
 use App\Controllers\MediaController;
@@ -30,6 +31,9 @@ $router->get('/terms',    [HomeController::class, 'terms']);
 // --- Contact ------------------------------------------------------------
 $router->get('/contact',  [ContactController::class, 'show']);
 $router->post('/contact', [ContactController::class, 'submit']);
+
+// --- Cookie consent (analytics opt-in) ----------------------------------
+$router->post('/consent', [ConsentController::class, 'store']);
 
 // --- Media (streamed from storage/, never executed) ---------------------
 $router->get('/media/{path...}', [MediaController::class, 'show']);
