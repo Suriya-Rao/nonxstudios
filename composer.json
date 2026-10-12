@@ -1,0 +1,27 @@
+{
+    "name": "nonxstudios/website",
+    "description": "NONXSTUDIOS — creative studio website and portfolio CMS (PHP 8.2 + MySQL).",
+    "type": "project",
+    "license": "proprietary",
+    "require": {
+        "php": ">=8.2",
+        "ext-pdo": "*",
+        "ext-fileinfo": "*",
+        "ext-json": "*"
+    },
+    "suggest": {
+        "phpmailer/phpmailer": "Needed only when MAIL_ENABLED=true and you prefer PHPMailer over the built-in SMTP client."
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/"
+        },
+        "files": [
+            "app/Helpers/functions.php"
+        ]
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true
+    }
+}

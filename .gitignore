@@ -1,0 +1,29 @@
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Dependencies
+/vendor/
+composer.lock
+
+# Runtime storage
+/storage/logs/*
+!/storage/logs/.gitkeep
+/storage/uploads/*
+!/storage/uploads/.gitkeep
+!/storage/uploads/thumbnails/
+/storage/uploads/thumbnails/*
+!/storage/uploads/thumbnails/.gitkeep
+
+# Public uploads fallback (if used)
+/public/uploads/*
+!/public/uploads/.gitkeep
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+*.log

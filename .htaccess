@@ -1,0 +1,29 @@
+# ---------------------------------------------------------------------------
+# NONXSTUDIOS — root protection
+#
+# This file matters when the web server's document root is the PROJECT ROOT
+# rather than `public/`. It denies direct access to application internals.
+# The recommended setup points the document root at `public/` instead, which
+# makes most of these rules redundant defence-in-depth.
+# ---------------------------------------------------------------------------
+
+# Deny direct access to application, config, storage and database directories.
+RedirectMatch 404 ^/(app|config|database|routes|storage|vendor)(/|$)
+
+# Deny dotfiles (.env, .git, …).
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
+
+# Deny common sensitive file extensions anywhere.
+<FilesMatch "\.(env|sql|log|md|json|lock|ya?ml|ini)$">
+    Require all denied
+</FilesMatch>
+
+# Deny PHP execution inside the upload directory (defence in depth).
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^storage/uploads/.*\.php$ - [F,L]
+</IfModule>
+
+Options -Indexes
