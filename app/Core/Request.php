@@ -67,9 +67,46 @@ final class Request
         return $_FILES[$key] ?? null;
     }
 
+    /**
+     * The visitor's IP address.
+     *
+     * REMOTE_ADDR is the connection peer, which behind a reverse proxy or
+     * tunnel is the proxy itself — every visitor would appear to share one
+     * address, and anything keyed on IP (the contact rate limiter, login
+     * throttling) would treat the whole internet as a single client.
+     *
+     * Proxy-supplied headers are therefore consulted, but only from the list
+     * in app.security.trusted_ip_headers. That list is empty by default for a
+     * directly-served site, because a client can send these headers itself and
+     * otherwise forge an identity to dodge rate limits.
+     */
     public static function ip(): string
     {
+        foreach ((array) config('app.security.trusted_ip_headers', []) as $header) {
+            $value = self::serverFromHeader((string) $header);
+            if ($value === null) {
+                continue;
+            }
+            // X-Forwarded-For is a comma-separated chain: client, proxy, proxy.
+            // The left-most entry is the original client.
+            $candidate = trim(explode(',', $value)[0]);
+            if (filter_var($candidate, FILTER_VALIDATE_IP) !== false) {
+                return $candidate;
+            }
+        }
+
         return (string) ($_SERVER['REMOTE_ADDR'] ?? '0.0.0.0');
+    }
+
+    /** Reads an HTTP_* server var for a header name like "CF-Connecting-IP". */
+    private static function serverFromHeader(string $header): ?string
+    {
+        if ($header === '') {
+            return null;
+        }
+        $key = 'HTTP_' . strtoupper(str_replace('-', '_', $header));
+        $value = $_SERVER[$key] ?? null;
+        return is_string($value) && $value !== '' ? $value : null;
     }
 
     public static function userAgent(): string

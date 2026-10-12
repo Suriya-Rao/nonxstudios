@@ -17,6 +17,7 @@ final class SeoController
             ['loc' => url('/services'), 'priority' => '0.8', 'freq' => 'monthly'],
             ['loc' => url('/about'),    'priority' => '0.7', 'freq' => 'monthly'],
             ['loc' => url('/contact'),  'priority' => '0.8', 'freq' => 'monthly'],
+            ['loc' => url('/faq'),      'priority' => '0.6', 'freq' => 'monthly'],
             ['loc' => url('/privacy'),  'priority' => '0.3', 'freq' => 'yearly'],
             ['loc' => url('/terms'),    'priority' => '0.3', 'freq' => 'yearly'],
         ];

@@ -26,6 +26,15 @@ return [
         'login_lockout_window' => (int) env('LOGIN_LOCKOUT_WINDOW', 900),
         'contact_rate_limit'   => (int) env('CONTACT_RATE_LIMIT', 3),
         'contact_rate_window'  => (int) env('CONTACT_RATE_WINDOW', 900),
+
+        // Headers that may carry the real client IP, consulted only when the
+        // request is known to arrive through a proxy. Order matters: the first
+        // header present wins. Left empty when the site is served directly, so
+        // a visitor cannot forge their own IP to evade the rate limiter.
+        'trusted_ip_headers'   => array_values(array_filter(array_map(
+            'trim',
+            explode(',', (string) env('TRUSTED_IP_HEADERS', 'CF-Connecting-IP'))
+        ))),
     ],
 
     'mail' => [

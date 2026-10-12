@@ -58,6 +58,8 @@ services:
       CONTACT_RATE_WINDOW: ${CONTACT_RATE_WINDOW:-900}
       LOGIN_MAX_ATTEMPTS: ${LOGIN_MAX_ATTEMPTS:-5}
       LOGIN_LOCKOUT_WINDOW: ${LOGIN_LOCKOUT_WINDOW:-900}
+      # Blank by default: a directly-served site must not trust client headers.
+      TRUSTED_IP_HEADERS: ${TRUSTED_IP_HEADERS:-}
 
       MAIL_ENABLED: ${MAIL_ENABLED:-false}
       MAIL_HOST: ${MAIL_HOST:-}

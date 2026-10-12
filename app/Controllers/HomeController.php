@@ -64,6 +64,61 @@ final class HomeController extends BaseController
         $this->view('pages/terms', $this->meta('Terms of Service — ' . Setting::value('company_name'), 'The terms that govern use of the NONXSTUDIOS website and services.'));
     }
 
+    public function faq(): void
+    {
+        $this->view('pages/faq', $this->meta(
+            'FAQ — ' . Setting::value('company_name'),
+            'Answers to common questions about working with NONXSTUDIOS: timelines, budgets, process, revisions and deliverables.'
+        ) + ['faqs' => $this->faqList()]);
+    }
+
+    /** @return array<int,array{q:string,a:string}> */
+    private function faqList(): array
+    {
+        return [
+            [
+                'q' => 'What kinds of projects do you take on?',
+                'a' => 'Motion graphics, brand and graphic design, video editing, 3D modelling and rendering, real-time 3D in Unreal Engine, product visualisation, cinematic animation, title sequences and social media creative. If your project is visual and needs craft, it is likely a fit.',
+            ],
+            [
+                'q' => 'How does a project usually start?',
+                'a' => 'You send an enquiry through the contact form describing what you are imagining. We reply to arrange a short call, then send a written proposal covering scope, timeline, deliverables and cost. Work begins once the proposal is approved and a deposit is received.',
+            ],
+            [
+                'q' => 'How long does a project take?',
+                'a' => 'A focused motion piece or a small batch of social assets typically takes one to three weeks. A full brand identity, product visualisation set or cinematic sequence usually runs four to eight weeks. Timelines are confirmed in writing before we begin.',
+            ],
+            [
+                'q' => 'How is pricing structured?',
+                'a' => 'Projects are quoted as a fixed fee based on scope, not billed hourly. The budget ranges on the contact form give us a starting point; we confirm an exact figure in the proposal once the brief is clear. There are no hidden extras.',
+            ],
+            [
+                'q' => 'How many revisions are included?',
+                'a' => 'Every proposal includes a defined number of revision rounds, usually two or three, at named stages. That keeps feedback structured and avoids endless loops. Additional rounds are always available and quoted transparently.',
+            ],
+            [
+                'q' => 'What do you need from me to begin?',
+                'a' => 'Your brand assets if you have them (logo, fonts, colour values, existing guidelines), any reference material you like, and a clear sense of the goal and audience. If assets do not exist yet, we can build them as part of the project.',
+            ],
+            [
+                'q' => 'What files do I receive at the end?',
+                'a' => 'Deliverables are supplied in the formats your channels need: high-resolution and web-optimised video, source renders, stills at print and screen resolutions, and exported graphics. Project source files can be included on request.',
+            ],
+            [
+                'q' => 'Do you work with clients remotely?',
+                'a' => 'Yes. The studio works remotely by default, sharing progress through review links and scheduled calls. Time zones have not been a barrier; we agree a communication rhythm at the start of each project.',
+            ],
+            [
+                'q' => 'Who owns the finished work?',
+                'a' => 'On final payment, you receive full usage rights to the delivered work for the purposes agreed in the proposal. We retain the right to show the work in our portfolio unless you ask us not to, and we are happy to agree confidentiality in writing.',
+            ],
+            [
+                'q' => 'Do you offer ongoing support?',
+                'a' => 'Yes. Many clients return for seasonal campaigns, additional social content or updates to existing assets. Ongoing work is quoted per batch, or as a monthly retainer for a steady stream of creative output.',
+            ],
+        ];
+    }
+
     /** @return array<int,array{title:string,desc:string,icon:string}> */
     private function serviceList(): array
     {

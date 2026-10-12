@@ -23,6 +23,7 @@ $router->get('/project/{slug}', [WorkController::class, 'show']);
 // --- Static marketing pages --------------------------------------------
 $router->get('/services', [HomeController::class, 'services']);
 $router->get('/about',    [HomeController::class, 'about']);
+$router->get('/faq',      [HomeController::class, 'faq']);
 $router->get('/privacy',  [HomeController::class, 'privacy']);
 $router->get('/terms',    [HomeController::class, 'terms']);
 

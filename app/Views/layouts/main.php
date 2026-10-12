@@ -15,12 +15,16 @@ $settings       = $settings ?? \App\Models\Setting::all();
 $title          = $title ?? (($settings['company_name'] ?? 'NONXSTUDIOS') . ' — Creative Studio');
 $metaDescription = $metaDescription ?? ($settings['footer_description'] ?? '');
 $canonical      = $canonical ?? url(\App\Core\Request::path());
+// Default social card. Pages that have their own artwork (project pages) pass
+// an absolute URL through BaseController::meta()'s fourth argument.
+$ogImage        = $ogImage ?? url('/assets/images/og-image.png');
 $bodyClass      = $bodyClass ?? '';
 $nav            = [
     ['label' => 'Home',     'href' => '/'],
     ['label' => 'Work',     'href' => '/work'],
     ['label' => 'Services', 'href' => '/services'],
     ['label' => 'About',    'href' => '/about'],
+    ['label' => 'FAQ',      'href' => '/faq'],
     ['label' => 'Contact',  'href' => '/contact'],
 ];
 $current = \App\Core\Request::path();
@@ -39,15 +43,19 @@ $current = \App\Core\Request::path();
 <meta property="og:title" content="<?= e($title) ?>">
 <meta property="og:description" content="<?= e($metaDescription) ?>">
 <meta property="og:url" content="<?= e($canonical) ?>">
-<?php if (!empty($ogImage)): ?>
 <meta property="og:image" content="<?= e($ogImage) ?>">
-<?php endif; ?>
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="<?= e($settings['company_name'] ?? 'NONXSTUDIOS') ?> — creative studio">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="<?= e($title) ?>">
 <meta name="twitter:description" content="<?= e($metaDescription) ?>">
+<meta name="twitter:image" content="<?= e($ogImage) ?>">
 
 <meta name="theme-color" content="#080808">
+<link rel="icon" href="<?= e(url('/favicon.ico')) ?>" sizes="any">
 <link rel="icon" href="<?= e(asset('assets/images/favicon.svg')) ?>" type="image/svg+xml">
+<link rel="apple-touch-icon" sizes="180x180" href="<?= e(asset('assets/images/apple-touch-icon.png')) ?>">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -159,6 +167,7 @@ $current = \App\Core\Request::path();
     <div class="footer__bottom">
         <p>&copy; <?= e(date('Y')) ?> <?= e($settings['company_name'] ?? 'NONXSTUDIOS') ?>. All rights reserved.</p>
         <div class="footer__legal">
+            <a href="<?= e(url('/faq')) ?>">FAQ</a>
             <a href="<?= e(url('/privacy')) ?>">Privacy Policy</a>
             <a href="<?= e(url('/terms')) ?>">Terms of Service</a>
         </div>

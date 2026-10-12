@@ -252,6 +252,7 @@ Notes:
 public/                 ← web root (point your vhost here)
     index.php           front controller
     .htaccess           rewrite + caching + headers
+    favicon.ico         generated (see tools/)
     assets/css|js|images|vendor
 admin/index.php         admin entry point (also reachable via /admin)
 app/
@@ -265,10 +266,17 @@ app/
 config/                 app.php, database.php
 routes/                 web.php, admin.php
 database/               schema.sql, seed.php, placeholder.php
+tools/                  generate-brand-assets.php
 storage/                logs/, uploads/   ← outside the web root
 .env.example
 composer.json
 ```
+
+**Generated brand assets.** `favicon.ico`, `assets/images/og-image.png` and
+`assets/images/apple-touch-icon.png` are committed but reproducible: run
+`php tools/generate-brand-assets.php` (requires the GD extension) to rebuild
+them from the same palette and monogram geometry as the SVG favicon. Edit the
+colours there, not by hand in an image editor, so the three stay consistent.
 
 **Uploads live in `storage/uploads/`**, outside the web root. They are streamed
 back through `/media/{path}` (`MediaController`), which validates the extension,
@@ -363,6 +371,17 @@ lock down `database/seed.php`.
 - [ ] **SMTP credentials** stored in `.env`, not in code.
 - [ ] **Monitor `storage/logs/`** for repeated failed logins.
 - [ ] **Rotate the admin password** if it was ever shared over an insecure channel.
+- [ ] **Set `TRUSTED_IP_HEADERS`** to match your infrastructure — `CF-Connecting-IP`
+      behind a Cloudflare Tunnel, `X-Forwarded-For` behind a load balancer, and
+      **blank** when Apache serves the site directly. Leaving it blank behind a
+      proxy makes every visitor share one rate-limit bucket; setting it while
+      serving directly lets visitors forge their own IP.
+- [ ] **Analytics and cookie consent** — neither is bundled. If you add a
+      tracking script, add a consent banner with it and update the privacy
+      policy, or you will be collecting personal data without a lawful basis.
+- [ ] **Regenerate the social card** — `assets/images/og-image.png` ships with a
+      placeholder domain. Rerun `tools/generate-brand-assets.php` after editing
+      the footer text if you want your own domain on it.
 
 ---
 
@@ -378,8 +397,9 @@ lock down `database/seed.php`.
 - Project case studies: cover, Markdown case study, gallery, video embed
   (YouTube/Vimeo, privacy-friendly `youtube-nocookie`), related projects
 - Fully working contact form with server-side validation
+- FAQ page with an accessible `<details>` accordion and `FAQPage` JSON-LD
 - Privacy Policy and Terms pages
-- Custom 404/403/419/429/500 error page
+- Custom 403/404/405/429/500 error page
 - Dynamic footer with configurable email, socials and a PHP-generated year
 
 ### Admin dashboard (`/admin`)
@@ -397,8 +417,8 @@ lock down `database/seed.php`.
 
 ### Technical
 
-- SEO: unique titles/descriptions, canonical URLs, Open Graph, Twitter cards,
-  XML sitemap, robots.txt, semantic HTML
+- SEO: unique titles/descriptions, canonical URLs, Open Graph (with a generated
+  1200×630 social card), Twitter cards, XML sitemap, robots.txt, semantic HTML
 - Accessibility: skip link, labelled form controls, ARIA states on the mobile
   menu and filters, visible focus rings, `prefers-reduced-motion` support
 - Performance: lazy-loaded images, mtime cache-busting, long-lived cache headers,
@@ -410,14 +430,16 @@ lock down `database/seed.php`.
 
 ## 11. Tests performed
 
-Verified against PHP 8.5.11 and MariaDB 13.0.2, served by `php -S`:
+Verified against PHP 8.2 (Docker: `php:8.2-apache`) and MariaDB 10.11, served by
+Apache with the document root at `public/`.
 
 **Syntax** — `php -l` on all 63 PHP files: 0 failures.
 
 **Public routes** — `/`, `/work`, `/work?category=…`, `/services`, `/about`,
-`/contact`, `/project/{slug}` (×2), `/privacy`, `/terms`, `/sitemap.xml`,
-`/robots.txt` all return 200 with no PHP warnings/notices/deprecations;
-unknown paths return a styled 404.
+`/faq`, `/contact`, `/project/{slug}` (×6), `/privacy`, `/terms`,
+`/sitemap.xml`, `/robots.txt` all return 200 with no PHP
+warnings/notices/deprecations; unknown paths return a styled 404. A full
+internal link crawl (18 URLs followed from `/`) found 0 broken links.
 
 **Database & seeding** — `php database/seed.php --fresh` created the schema,
 13 settings, 6 projects, 18 gallery images and 24 generated placeholder JPEGs;
@@ -425,8 +447,10 @@ re-running is idempotent.
 
 **Contact form** — valid submission → 302 → success message → row persisted with
 the comma-containing budget intact; invalid submission → field-level errors and
-old input preserved (PRG); bad CSRF token → 419; per-IP rate limit triggered on
-the 4th submission within the window; honeypot field present.
+old input preserved (PRG); bad CSRF token → 403; per-IP rate limit triggered on
+the 4th submission within the window; honeypot field present. Also exercised
+end-to-end through a real browser session (fill → submit → success banner) at a
+390×844 viewport.
 
 **Authentication** — anonymous access to `/admin` redirects to the login screen;
 wrong password rejected; correct password issues a session; 5 consecutive
@@ -441,14 +465,27 @@ updates propagate to the public site; a non-`https://` social URL is rejected.
 **Security** — a PHP payload renamed `.jpg` was rejected by MIME detection with
 no file written to disk; `<script>` and `<img onerror=…>` in a project title
 were stored but rendered as escaped, inert text on the public page; `/media/../../.env`
-returns 404.
+returns 404; the 403/404/405 error pages were confirmed to leak no SQL, file
+paths or stack traces.
 
-**Assets** — CSS, JS, GSAP, ScrollTrigger, Three.js, hero3d.js and the favicon
-all serve 200; Three.js/hero3d load on the homepage only, not on interior pages.
+**Proxy-aware client IP** — a request carrying `CF-Connecting-IP` is recorded
+against the real visitor address rather than the proxy, and the contact rate
+limiter then isolates visitors from one another (three submissions from one
+address block only that address).
 
-**Accessibility/SEO** — all 7 homepage images carry alt text; all 9 contact-form
-controls have associated labels; skip link, canonical, Open Graph and Twitter
-tags present; sitemap contains 13 URLs.
+**Assets** — CSS, JS, GSAP, ScrollTrigger, Three.js, hero3d.js, `favicon.ico`,
+`apple-touch-icon.png` and `og-image.png` all serve 200; Three.js/hero3d load on
+the homepage only, not on interior pages.
+
+**Accessibility/SEO** — every image carries alt text; all contact-form controls
+have associated labels; skip link, canonical, Open Graph (including
+`og:image`) and Twitter card tags present; FAQ page emits valid `FAQPage`
+JSON-LD; sitemap contains 14 URLs.
+
+**Mobile layout** — verified at 390×844 with a real headless Chrome session: the
+hero entrance animation completes, the hamburger menu opens with
+`aria-expanded` toggling, all six nav links are hit-testable, and the enquiry
+form is usable.
 
 ---
 

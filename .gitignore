@@ -1,7 +1,9 @@
 # Environment / secrets
 .env
 .env.*
-!.env.example
+# …but keep every committed template. Real secrets never end in ".example",
+# and without this the deploy/ templates are silently ignored.
+!*.example
 
 # Dependencies
 /vendor/
