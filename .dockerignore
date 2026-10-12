@@ -1,0 +1,37 @@
+# ---------------------------------------------------------------------------
+# Keep the build context small and free of secrets.
+# ---------------------------------------------------------------------------
+.git
+.gitignore
+.dockerignore
+Dockerfile
+docker-compose.yml
+
+# Secrets — never baked into an image layer.
+.env
+.env.local
+.env.production
+.env.staging
+.env.*.local
+
+# Runtime state (mounted as volumes instead).
+storage/logs/*
+storage/uploads/*
+!storage/logs/.gitkeep
+!storage/uploads/.gitkeep
+!storage/uploads/thumbnails/.gitkeep
+
+# Composer vendor is optional; the app has a fallback autoloader.
+vendor/
+composer.lock
+
+# Editor / OS noise
+.DS_Store
+*.swp
+.idea/
+.vscode/
+*.log
+
+# Docs and local-only tooling
+README.md
+deploy/

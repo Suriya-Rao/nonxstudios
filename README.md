@@ -14,15 +14,16 @@ production.
 
 1. [Requirements](#1-requirements)
 2. [Local setup](#2-local-setup)
-3. [Create the first administrator](#3-create-the-first-administrator)
-4. [Configure SMTP](#4-configure-smtp)
-5. [Project structure](#5-project-structure)
-6. [How the security model works](#6-how-the-security-model-works)
-7. [Deployment to PHP hosting](#7-deployment-to-php-hosting)
-8. [Production checklist](#8-production-checklist)
-9. [Implemented features](#9-implemented-features)
-10. [Tests performed](#10-tests-performed)
-11. [Known limitations](#11-known-limitations)
+3. [Docker (recommended)](#3-docker-recommended)
+4. [Create the first administrator](#4-create-the-first-administrator)
+5. [Configure SMTP](#5-configure-smtp)
+6. [Project structure](#6-project-structure)
+7. [How the security model works](#7-how-the-security-model-works)
+8. [Deployment to PHP hosting](#8-deployment-to-php-hosting)
+9. [Production checklist](#9-production-checklist)
+10. [Implemented features](#10-implemented-features)
+11. [Tests performed](#11-tests-performed)
+12. [Known limitations](#12-known-limitations)
 
 ---
 
@@ -121,7 +122,76 @@ php -S localhost:8000 -t public
 
 ---
 
-## 3. Create the first administrator
+## 3. Docker (recommended)
+
+The repository ships a self-contained stack — Apache + PHP 8.2 (mod_php) and
+MariaDB 10.11 — so it runs identically on any machine with Docker. Nothing but
+Docker is required on the host.
+
+### 3.1 Configure
+
+```bash
+cp .env.example .env
+```
+
+Set at minimum these values in `.env`:
+
+| Key | Notes |
+|---|---|
+| `APP_KEY` | `php -r "echo bin2hex(random_bytes(32));"` |
+| `DB_PASS` | password for the application database user |
+| `DB_ROOT_PASS` | password for MariaDB `root` (used only to initialise the volume) |
+| `APP_URL` | the address you will browse, e.g. `http://localhost:8080` |
+
+Optionally, to seed content and create your admin on first boot:
+
+```bash
+SEED_DEMO=true
+ADMIN_EMAIL=you@yourstudio.com
+ADMIN_PASSWORD='Choose-A-Strong-Password'
+ADMIN_NAME="Your Name"
+```
+
+### 3.2 Start
+
+```bash
+docker compose up -d --build
+```
+
+The entrypoint waits for MariaDB, applies the schema (idempotently), and starts
+Apache. Watch it with:
+
+```bash
+docker compose logs -f web
+```
+
+Then browse **http://localhost:8080** (`WEB_PORT` changes the port).
+
+### 3.3 Common commands
+
+```bash
+docker compose down            # stop, keep the database
+docker compose down -v         # stop and DELETE all data
+docker compose up -d --build   # rebuild after code changes
+docker compose exec web php database/seed.php --admin-email=you@x.com --admin-password='…'
+```
+
+### 3.4 Notes
+
+- **`--fresh` is never run automatically.** It drops every table. Demo seeding
+  only inserts projects whose slug does not already exist, so restarts are safe.
+- Uploads and logs live in named volumes (`uploads`, `logs`) and survive
+  rebuilds; the database lives in `db_data`.
+- The database is **not** published to the host — only the `web` service can
+  reach it, over the internal Docker network.
+- The image copies the code in and sets `opcache.validate_timestamps=0`. After
+  changing PHP files, rebuild (or restart) the container.
+- `.env` is excluded by `.dockerignore`, so secrets are never baked into an
+  image layer.
+
+---
+
+## 4. Create the first administrator
 
 There is no public sign-up. Create the first admin from the command line:
 
@@ -144,7 +214,7 @@ automatically on login if PHP's default algorithm changes.
 
 ---
 
-## 4. Configure SMTP
+## 5. Configure SMTP
 
 Email notifications are **optional**. With `MAIL_ENABLED=false` (the default),
 inquiries are still saved to the database and shown in the dashboard — you
@@ -176,7 +246,7 @@ Notes:
 
 ---
 
-## 5. Project structure
+## 6. Project structure
 
 ```
 public/                 ← web root (point your vhost here)
@@ -208,7 +278,7 @@ executed as PHP.
 
 ---
 
-## 6. How the security model works
+## 7. How the security model works
 
 | Concern | Mitigation |
 |---|---|
@@ -229,7 +299,7 @@ executed as PHP.
 
 ---
 
-## 7. Deployment to PHP hosting
+## 8. Deployment to PHP hosting
 
 ### Recommended: document root at `public/`
 
@@ -279,7 +349,7 @@ lock down `database/seed.php`.
 
 ---
 
-## 8. Production checklist
+## 9. Production checklist
 
 - [ ] **HTTPS** — install a TLS certificate; set `SESSION_SECURE=true` (this also enables HSTS).
 - [ ] **`APP_DEBUG=false`** — never show stack traces to visitors.
@@ -296,7 +366,7 @@ lock down `database/seed.php`.
 
 ---
 
-## 9. Implemented features
+## 10. Implemented features
 
 ### Public site
 
@@ -338,7 +408,7 @@ lock down `database/seed.php`.
 
 ---
 
-## 10. Tests performed
+## 11. Tests performed
 
 Verified against PHP 8.5.11 and MariaDB 13.0.2, served by `php -S`:
 
@@ -382,7 +452,7 @@ tags present; sitemap contains 13 URLs.
 
 ---
 
-## 11. Known limitations
+## 12. Known limitations
 
 - **Demo content is illustrative.** The six seeded projects are sample
   placeholders with procedurally generated abstract artwork. They are labelled
