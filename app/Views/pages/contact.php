@@ -134,7 +134,13 @@ $cls    = static fn(string $k): string => isset($errors[$k]) ? ' has-error' : ''
                 </form>
             </div>
 
-            <aside class="contact-aside">
+            <!-- Supplementary contact details beside the form. Deliberately a
+                 plain <div> rather than <aside>: a complementary landmark
+                 nested inside <main> is announced inconsistently by screen
+                 readers, and the sr-only <h2> below keeps the heading outline
+                 sequential for the <h3> groups it contains. -->
+            <div class="contact-aside">
+                <h2 class="sr-only">Contact details</h2>
                 <div>
                     <h3>Email</h3>
                     <?php if (!empty($settings['contact_email'])): ?>
@@ -171,7 +177,7 @@ $cls    = static fn(string $k): string => isset($errors[$k]) ? ' has-error' : ''
                         </ul>
                     </div>
                 <?php endif; ?>
-            </aside>
+            </div>
         </div>
     </div>
 </section>

@@ -13,6 +13,9 @@
 
 <section class="section">
     <div class="container">
+        <!-- Keeps the heading outline sequential: project cards use <h3>, so a
+             level-2 heading must exist between the page <h1> and them. -->
+        <h2 class="sr-only">Project gallery</h2>
         <?php if ($projects === []): ?>
             <div class="empty">
                 <h3>Nothing here yet</h3>

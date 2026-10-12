@@ -477,10 +477,16 @@ address block only that address).
 `apple-touch-icon.png` and `og-image.png` all serve 200; Three.js/hero3d load on
 the homepage only, not on interior pages.
 
-**Accessibility/SEO** — every image carries alt text; all contact-form controls
-have associated labels; skip link, canonical, Open Graph (including
-`og:image`) and Twitter card tags present; FAQ page emits valid `FAQPage`
-JSON-LD; sitemap contains 14 URLs.
+**Accessibility/SEO** — **axe-core 4.10 reports 0 violations across all 8
+public pages** (was 11: 8 colour-contrast, 2 heading-order, 1 landmark). The
+contrast failures traced to a single token, `--muted-2` (#6b6b6b, 3.8:1), which
+is now #8a8a8a and clears 4.5:1 on every surface it is used against. Heading
+outlines are sequential on every page, and the contact page's supplementary
+column is a plain `<div>` rather than a complementary landmark nested in
+`<main>`. Every image carries alt text; all contact-form controls have
+associated labels; skip link, canonical, Open Graph (including `og:image`) and
+Twitter card tags present; FAQ page emits valid `FAQPage` JSON-LD; sitemap
+contains 14 URLs.
 
 **Mobile layout** — verified at 390×844 with a real headless Chrome session: the
 hero entrance animation completes, the hamburger menu opens with

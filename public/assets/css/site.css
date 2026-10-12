@@ -11,7 +11,10 @@
     --bg-3:      #161616;
     --text:      #F5F5F5;
     --muted:     #999999;
-    --muted-2:   #6b6b6b;
+    /* #6b6b6b read as 3.8:1 on --bg and 3.4:1 on --bg-3, below the 4.5:1 AA
+       minimum for body text. This value clears 4.5:1 on every surface it is
+       used against while still reading as the quietest tier of type. */
+    --muted-2:   #8a8a8a;
     --accent:    #C7FF35;
     --accent-dim:#9fcc2a;
     --line:      rgba(245, 245, 245, 0.10);
