@@ -98,6 +98,77 @@ final class Request
         return (string) ($_SERVER['REMOTE_ADDR'] ?? '0.0.0.0');
     }
 
+    /**
+     * The host the current request was addressed to, e.g. "example.com" or
+     * "localhost:8080". Null when there is no usable request (CLI) or when the
+     * Host header is not trusted.
+     */
+    public static function host(): ?string
+    {
+        $host = $_SERVER['HTTP_HOST'] ?? '';
+        if (!is_string($host) || $host === '') {
+            $host = (string) ($_SERVER['SERVER_NAME'] ?? '');
+        }
+
+        $host = strtolower(trim($host));
+        if ($host === '') {
+            return null;
+        }
+
+        // This value ends up inside href/src attributes, so it is restricted to
+        // a plain host[:port]. Anything else (spaces, slashes, quotes) is
+        // rejected rather than escaped, because no legitimate Host needs them.
+        if (preg_match('/^[a-z0-9.\-]+(:\d{1,5})?$/', $host) !== 1) {
+            return null;
+        }
+
+        // Optional allowlist. Empty (the default) means "trust the Host header",
+        // which is what almost every framework does; setting it pins the site to
+        // known names, which matters when a stale DNS record points at the box.
+        $allowed = array_filter(array_map('strtolower', (array) config('app.security.trusted_hosts', [])));
+        if ($allowed !== [] && !in_array($host, $allowed, true)) {
+            return null;
+        }
+
+        return $host;
+    }
+
+    /** "http" or "https" for the current request. */
+    public static function scheme(): string
+    {
+        // When TLS terminates upstream (tunnel, load balancer) Apache sees a
+        // plain HTTP connection, so the original scheme only survives in a
+        // forwarded header. Consulted only when explicitly configured, for the
+        // same reason as trusted_ip_headers.
+        foreach ((array) config('app.security.trusted_proto_headers', []) as $header) {
+            $value = self::serverFromHeader((string) $header);
+            if ($value === null) {
+                continue;
+            }
+            $proto = strtolower(trim(explode(',', $value)[0]));
+            if ($proto === 'https' || $proto === 'http') {
+                return $proto;
+            }
+        }
+
+        $https = $_SERVER['HTTPS'] ?? '';
+        return is_string($https) && $https !== '' && strtolower($https) !== 'off' ? 'https' : 'http';
+    }
+
+    /**
+     * The origin the page was requested from, e.g. "https://example.com".
+     *
+     * Links and asset URLs must be built against this, not against the fixed
+     * APP_URL setting: a site reached through a tunnel, a reverse proxy or a
+     * second hostname would otherwise emit links back to the configured host,
+     * so every asset 404s for the visitor and CSP form-action blocks the forms.
+     */
+    public static function origin(): ?string
+    {
+        $host = self::host();
+        return $host === null ? null : self::scheme() . '://' . $host;
+    }
+
     /** Reads an HTTP_* server var for a header name like "CF-Connecting-IP". */
     private static function serverFromHeader(string $header): ?string
     {

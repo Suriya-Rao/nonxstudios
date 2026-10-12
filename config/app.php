@@ -35,6 +35,25 @@ return [
             'trim',
             explode(',', (string) env('TRUSTED_IP_HEADERS', 'CF-Connecting-IP'))
         ))),
+
+        // Hostnames the site may be reached by, used to build absolute links.
+        // Empty (the default) accepts whatever Host the request carries, which
+        // is what lets the same build serve localhost, a tunnel and a real
+        // domain unchanged. Set it to pin the site to known names — worth doing
+        // in production so a stale DNS record pointing at the box cannot make
+        // the site emit links to someone else's hostname.
+        'trusted_hosts'        => array_values(array_filter(array_map(
+            'trim',
+            explode(',', (string) env('TRUSTED_HOSTS', ''))
+        ))),
+
+        // Headers that may carry the original scheme when TLS terminates
+        // upstream. Same opt-in reasoning as trusted_ip_headers: a client can
+        // send these itself, so they are only believed when configured.
+        'trusted_proto_headers' => array_values(array_filter(array_map(
+            'trim',
+            explode(',', (string) env('TRUSTED_PROTO_HEADERS', ''))
+        ))),
     ],
 
     /*

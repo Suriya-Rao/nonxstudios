@@ -60,6 +60,12 @@ services:
       LOGIN_LOCKOUT_WINDOW: ${LOGIN_LOCKOUT_WINDOW:-900}
       # Blank by default: a directly-served site must not trust client headers.
       TRUSTED_IP_HEADERS: ${TRUSTED_IP_HEADERS:-}
+      # Scheme header set by an upstream TLS terminator (e.g. cloudflared,
+      # a load balancer). Blank when Apache terminates TLS itself.
+      TRUSTED_PROTO_HEADERS: ${TRUSTED_PROTO_HEADERS:-}
+      # Hostnames the site may be reached by. Blank accepts any Host header,
+      # which is what lets one build serve localhost, a tunnel and a domain.
+      TRUSTED_HOSTS: ${TRUSTED_HOSTS:-}
 
       MAIL_ENABLED: ${MAIL_ENABLED:-false}
       MAIL_HOST: ${MAIL_HOST:-}

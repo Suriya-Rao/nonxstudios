@@ -80,11 +80,26 @@ if (!function_exists('storage_path')) {
 }
 
 if (!function_exists('url')) {
-    /** Build an absolute URL against APP_URL. */
+    /**
+     * Build an absolute URL for a path.
+     *
+     * The origin is taken from the current request, so the site works when it
+     * is reached by any hostname — a tunnel, a staging domain, a reverse proxy
+     * — without rebuilding. APP_URL is only the fallback for contexts with no
+     * request (CLI, the seeder, cron), and is the right value to set for
+     * canonical URLs behind a proxy.
+     *
+     * Using the request origin rather than a fixed base matters beyond
+     * cosmetics: a page served over a tunnel that emitted APP_URL-based asset
+     * links would make every visitor's browser request those assets from their
+     * own machine, so the page would load unstyled and unstyled-only.
+     */
     function url(string $path = ''): string
     {
-        $base = rtrim((string) env('APP_URL', ''), '/');
-        return $base . '/' . ltrim($path, '/');
+        $origin = \App\Core\Request::origin()
+            ?? rtrim((string) env('APP_URL', ''), '/');
+
+        return $origin . '/' . ltrim($path, '/');
     }
 }
 
