@@ -58,6 +58,18 @@ else
     log "Schema step reported an error — see output above. Starting Apache anyway."
 fi
 
+# --- Keep /admin off the public tunnel --------------------------------------
+# Unless explicitly allowed, deny /admin to any request carrying
+# CF-Connecting-IP (i.e. one that arrived through a Cloudflare Tunnel). Local
+# access is unaffected, so the dashboard stays usable from the host.
+if [ "${ADMIN_ALLOW_REMOTE:-false}" = "true" ]; then
+    log "ADMIN_ALLOW_REMOTE=true — the admin panel is publicly reachable."
+    rm -f /etc/apache2/nonx-admin-guard.conf
+else
+    cp /var/www/nonxstudios/docker/admin-guard.conf /etc/apache2/nonx-admin-guard.conf
+    log "Admin panel restricted to local access (set ADMIN_ALLOW_REMOTE=true to override)."
+fi
+
 # --- Hand off to Apache -----------------------------------------------------
 log "Starting Apache."
 exec "$@"
